@@ -854,7 +854,9 @@ document.getElementById('modal-offre').addEventListener('click', function(e) { i
 
 // ── Restaure la session Supabase au chargement ──
 window.addEventListener('load', async () => {
-  const { data: { session } } = await sb.auth.getSession();
+  // Gère le token dans l'URL après confirmation email
+  const { data: { session }, error } = await sb.auth.getSession();
+  
   if (session) {
     currentUser = session.user;
     const uid = currentUser.id;
@@ -863,9 +865,30 @@ window.addEventListener('load', async () => {
       userProfil = JSON.parse(saved);
       cvOriginal = localStorage.getItem('jobalert_cv_' + uid) || '';
       showDashboard();
+    } else {
+      showPage('onboarding');
     }
   }
+
+  // Écoute les changements de session (connexion, déconnexion, confirmation email)
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      currentUser = session.user;
+      const uid = currentUser.id;
+      const saved = localStorage.getItem('jobalert_profil_' + uid);
+      if (saved) {
+        userProfil = JSON.parse(saved);
+        cvOriginal = localStorage.getItem('jobalert_cv_' + uid) || '';
+        showDashboard();
+      } else {
+        showPage('onboarding');
+      }
+    }
+    if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      userProfil = null;
+      cvOriginal = '';
+      showPage('landing');
+    }
+  });
 });
-</script>
-</body>
-</html>
