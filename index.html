@@ -580,7 +580,20 @@ async function handleRegister() {
     return;
   }
 
-  currentUser = data.user;
+  // Attendre que la session soit active
+  if (data.session) {
+    currentUser = data.session.user;
+  } else {
+    // Forcer une connexion immédiate après inscription
+    const { data: loginData, error: loginError } = await sb.auth.signInWithPassword({ email, password });
+    if (loginError || !loginData.session) {
+      showAuthError('register', 'Compte créé ! Connecte-toi maintenant.');
+      showPage('login');
+      return;
+    }
+    currentUser = loginData.session.user;
+  }
+
   showPage('onboarding');
   showToast('✅', 'Bienvenue ' + nom.split(' ')[0] + ' !');
 }
@@ -643,11 +656,15 @@ async function traiterFichier(file) {
 
       // Analyse CV — route protégée
       const headers = await getAuthHeaders();
+      const controller2 = new AbortController();
+      const timeout2 = setTimeout(() => controller2.abort(), 60000);
       const res2 = await fetch(API_URL + '/ia/analyser-cv', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ texte_cv: cvOriginal })
+        body: JSON.stringify({ texte_cv: cvOriginal }),
+        signal: controller2.signal
       });
+      clearTimeout(timeout2);
       const data2 = await res2.json();
 
       if (data2.success && data2.profil) {
