@@ -1,9 +1,9 @@
 // Service Worker JobAlert PWA
 const CACHE_NAME = 'jobalert-v1';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  '/app/',
+  '/app/index.html',
+  '/app/manifest.json'
 ];
 
 // Installation — mise en cache des assets statiques

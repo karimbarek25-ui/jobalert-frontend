@@ -1,0 +1,19 @@
+# Secrets & env
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (si build process ajouté plus tard)
+node_modules/
+dist/
+.cache/
