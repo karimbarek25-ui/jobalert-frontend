@@ -1,5 +1,5 @@
 // Service Worker JobAlert PWA
-const CACHE_NAME = 'jobalert-v1';
+const CACHE_NAME = 'jobalert-v2';
 const STATIC_ASSETS = [
   '/app/',
   '/app/index.html',
@@ -24,16 +24,24 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Fetch — stratégie Network First pour l'API, Cache First pour les assets
+// Fetch
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  
-  // API Railway → toujours réseau (pas de cache)
-  if (url.hostname.includes('railway.app')) {
-    e.respondWith(fetch(e.request).catch(() => new Response('{"error":"offline"}', {headers:{'Content-Type':'application/json'}})));
+
+  // Laisser passer toutes les requêtes non-GET sans toucher au cache
+  if (e.request.method !== 'GET') {
+    e.respondWith(fetch(e.request));
     return;
   }
-  
+
+  // API externe → toujours réseau, jamais de cache
+  if (url.hostname !== self.location.hostname) {
+    e.respondWith(
+      fetch(e.request).catch(() => new Response('{"error":"offline"}', {headers: {'Content-Type': 'application/json'}}))
+    );
+    return;
+  }
+
   // Assets statiques → cache first
   e.respondWith(
     caches.match(e.request).then(cached => {
@@ -44,7 +52,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         }
         return response;
-      }).catch(() => caches.match('/index.html'));
+      }).catch(() => caches.match('/app/index.html'));
     })
   );
 });
