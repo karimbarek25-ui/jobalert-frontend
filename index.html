@@ -1266,19 +1266,20 @@ async function chargerServeur(){
       favoris=d.data.favoris||[];candidatures=d.data.candidatures||[];
       if(d.data.cv_texte)cvTexte=d.data.cv_texte;
       if(d.data.cv_base64)cvB64=d.data.cv_base64;
+      if(d.data.lm_base)lmBase=d.data.lm_base;
     }
   }catch{
     try{profil=JSON.parse(localStorage.getItem('ja_profil_'+user.id)||'{}');}catch{}
     try{criteres=JSON.parse(localStorage.getItem('ja_criteres_'+user.id)||'{}');}catch{}
   }
   if(!cvTexte){cvTexte=localStorage.getItem('ja_cv_'+user.id)||'';}
-  lmBase=localStorage.getItem('ja_lm_'+user.id)||'';
+  if(!lmBase)lmBase=localStorage.getItem('ja_lm_'+user.id)||'';
 }
 async function sauverServeur(){
   if(!user||!profil)return;
   try{
     const h=await headers();
-    await fetch(API+'/user/sauvegarder',{method:'POST',headers:h,body:JSON.stringify({user_id:user.id,profil,criteres})});
+    await fetch(API+'/user/sauvegarder',{method:'POST',headers:h,body:JSON.stringify({user_id:user.id,profil,criteres,lm_base:lmBase||null})});
   }catch{
     localStorage.setItem('ja_profil_'+user.id,JSON.stringify(profil));
     localStorage.setItem('ja_criteres_'+user.id,JSON.stringify(criteres));
