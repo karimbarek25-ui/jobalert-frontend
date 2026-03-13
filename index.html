@@ -536,6 +536,27 @@ function scrollToSection(id){document.getElementById(id)?.scrollIntoView({behavi
   </div>
 </div>
 
+<!-- ══ UPGRADE MODAL ══ -->
+<div id="modal-upgrade" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:48px 40px;max-width:480px;width:90%;text-align:center;position:relative;">
+    <button onclick="document.getElementById('modal-upgrade').style.display='none'" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;">✕</button>
+    <div style="font-size:2.5rem;margin-bottom:16px;">🚀</div>
+    <h2 style="font-size:1.6rem;margin-bottom:8px;">Fonctionnalité Premium</h2>
+    <p style="color:var(--muted);margin-bottom:28px;">Le scoring IA et la génération de lettres sont réservés aux abonnés. Débloquez toutes les fonctionnalités pour 9,99€/mois.</p>
+    <div style="background:#1e293b;border-radius:12px;padding:20px;margin-bottom:28px;text-align:left;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;font-size:.9rem;">✅ <span>Score IA pour chaque offre</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:.9rem;">✅ <span>Lettre de motivation personnalisée</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:.9rem;">✅ <span>Alertes email en temps réel</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:.9rem;">✅ <span>Offres illimitées</span></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:.9rem;">✅ <span>Analytics candidatures</span></div>
+      </div>
+    </div>
+    <button onclick="demarrerPaiement()" style="width:100%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:10px;padding:16px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;">S'abonner — 9,99€/mois →</button>
+    <p style="color:var(--muted);font-size:.8rem;margin-top:12px;">Sans engagement · Annulable à tout moment</p>
+  </div>
+</div>
+
 <!-- ══ LOGIN ══ -->
 <div id="page-login" class="page">
   <div class="auth-page">
@@ -857,6 +878,10 @@ function scrollToSection(id){document.getElementById(id)?.scrollIntoView({behavi
       <div class="nav-item" id="nav-criteres" onclick="showTab('criteres',this)"><span class="icon">⚙️</span> Critères</div>
       <div class="nav-item" id="nav-profil" onclick="showTab('profil',this)"><span class="icon">👤</span> Profil</div>
       <div class="sidebar-footer">
+        <div style="padding:8px 12px 4px;">
+          <span id="sub-badge" style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:rgba(100,116,139,.15);color:#94a3b8;">Gratuit</span>
+        </div>
+        <div class="nav-item" onclick="subscribed?gererAbonnement():document.getElementById('modal-upgrade').style.display='flex'" style="color:#818cf8;font-size:13px;"><span class="icon">💳</span> <span id="sub-btn-text">Passer Premium</span></div>
         <div id="btn-install-pwa-desktop" class="nav-item" onclick="installerPWA()" style="display:none;color:#818cf8;"><span class="icon">📲</span> Installer l'app</div>
         <div class="nav-item" onclick="handleLogout()" style="color:#ef4444;"><span class="icon">🚪</span> Déconnexion</div>
       </div>
@@ -1272,6 +1297,7 @@ const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let user=null,profil=null,criteres={},cvTexte='',cvB64='',lmBase='';
 let offresAll=[],offresFiltered=[],favoris=[],candidatures=[];
+let subscribed=false;
 let scoreFilter='all',sourceFilter='all',pageActuelle=1,totalPages=1;
 let offreEnCours=null;
 
@@ -1441,6 +1467,46 @@ function nextStep(s){
   document.getElementById('step-'+s).classList.add('active');
   for(let i=1;i<=3;i++){const el=document.getElementById('prog-'+i);el.className='prog-step'+(i<s?' done':i===s?' active':'');}
 }
+async function checkSubscription(){
+  try{
+    const h=await headers();
+    const r=await fetch(API+'/billing/status',{headers:h});
+    const d=await r.json();
+    subscribed=d.subscribed||false;
+    const badge=document.getElementById('sub-badge');
+    if(badge){badge.textContent=subscribed?'Premium':'Gratuit';badge.style.background=subscribed?'rgba(34,197,94,.15)':'rgba(100,116,139,.15)';badge.style.color=subscribed?'#4ade80':'#94a3b8';}
+    const btn=document.getElementById('sub-btn-text');if(btn)btn.textContent=subscribed?'Gérer mon abonnement':'Passer Premium';
+  }catch{subscribed=false;}
+}
+
+async function demarrerPaiement(){
+  try{
+    const h=await headers();
+    const r=await fetch(API+'/billing/checkout',{method:'POST',headers:h});
+    const d=await r.json();
+    if(d.url)window.location.href=d.url;
+  }catch{toast('❌','Erreur paiement');}
+}
+
+async function gererAbonnement(){
+  try{
+    const h=await headers();
+    const r=await fetch(API+'/billing/portal',{method:'POST',headers:h});
+    const d=await r.json();
+    if(d.url)window.open(d.url,'_blank');
+  }catch{toast('❌','Erreur portail');}
+}
+
+function requireSubscription(fn){
+  return async function(...args){
+    if(!subscribed){
+      document.getElementById('modal-upgrade').style.display='flex';
+      return;
+    }
+    return fn(...args);
+  };
+}
+
 function showDashboard(){
   showPage('dashboard');
   document.getElementById('main-nav').style.display='none';
@@ -1448,6 +1514,11 @@ function showDashboard(){
   document.getElementById('kpi-favs').textContent=favoris.length;
   document.getElementById('badge-favoris').textContent=favoris.length;
   document.getElementById('kpi-cands').textContent=candidatures.length;
+  checkSubscription();
+  // Gérer retour Stripe
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('payment')==='success'){toast('🎉','Abonnement activé ! Bienvenue en Premium.');window.history.replaceState(null,'',window.location.pathname);setTimeout(checkSubscription,2000);}
+  if(params.get('payment')==='cancel'){toast('ℹ️','Paiement annulé.');}
   chargerOffres(1);
 }
 
@@ -1765,6 +1836,7 @@ async function ouvrirOffreData(o){
   document.getElementById('lettre-loading-msg').textContent=lmBase?'Adaptation de ta lettre...':'Rédaction de la lettre...';
   document.getElementById('modal-offre').classList.add('open');
   if(profil&&cvTexte){
+    if(!subscribed){document.getElementById('lettre-loading').style.display='none';document.getElementById('modal-lettre').style.display='block';document.getElementById('modal-lettre').value='';document.getElementById('modal-upgrade').style.display='flex';return;}
     try{
       const h=await headers();
       const r=await fetch(API+'/ia/package-complet',{method:'POST',headers:h,body:JSON.stringify({profil,offre:o,lm_base:lmBase||null})});
