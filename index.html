@@ -215,9 +215,9 @@
     <div class="section-title">Tout ce dont tu as besoin<br>pour décrocher un emploi</div>
     <div class="features-grid">
       <div class="feature-card"><div class="feature-icon">⚡</div><h3>Alertes en temps réel</h3><p>Sois notifié en moins de 5 minutes quand une offre correspondant à ton profil est publiée.</p></div>
-      <div class="feature-card"><div class="feature-icon">🎯</div><h3>Score de compatibilité</h3><p>L'IA analyse chaque offre et te donne un score de 0 à 100%.</p></div>
-      <div class="feature-card"><div class="feature-icon">📄</div><h3>CV dynamique</h3><p>Ton CV est automatiquement reconfiguré pour coller aux mots-clés de chaque offre.</p></div>
-      <div class="feature-card"><div class="feature-icon">✍️</div><h3>Lettre personnalisée</h3><p>L'IA rédige une lettre de motivation personnalisée pour chaque offre.</p></div>
+      <div class="feature-card"><div class="feature-icon">✍️</div><h3>Lettre personnalisée</h3><p>Une lettre de motivation générée par l'IA pour chaque offre, à partir de ton CV.</p></div>
+      <div class="feature-card"><div class="feature-icon">📄</div><h3>Ton CV</h3><p>Ton CV est disponible pour chaque candidature, à envoyer avec la lettre générée.</p></div>
+      <div class="feature-card"><div class="feature-icon">🔗</div><h3>Multi-sources</h3><p>France Travail, ATS et 60+ sources agrégées pour ne manquer aucune offre.</p></div>
       <div class="feature-card"><div class="feature-icon">📊</div><h3>Tableau de bord</h3><p>Suis toutes tes candidatures en un seul endroit.</p></div>
       <div class="feature-card"><div class="feature-icon">🎓</div><h3>Coach entretien</h3><p>Prépare chaque entretien avec un briefing personnalisé.</p></div>
     </div>
@@ -229,7 +229,7 @@
       <div class="steps">
         <div class="step"><div class="step-num">1</div><h3>Upload ton CV</h3><p>L'IA analyse ton profil en quelques secondes.</p></div>
         <div class="step"><div class="step-num">2</div><h3>Définis tes critères</h3><p>Poste, localisation, contrat, salaire.</p></div>
-        <div class="step"><div class="step-num">3</div><h3>Reçois et postule</h3><p>CV et lettre prêts. Tu postules en 1 clic.</p></div>
+        <div class="step"><div class="step-num">3</div><h3>Reçois et postule</h3><p>Lettre générée par l'IA. Tu postules en 1 clic avec ton CV.</p></div>
       </div>
     </div>
   </section>
@@ -325,9 +325,6 @@
           <div class="form-group"><label>Ville</label><input type="text" placeholder="Ex: Marseille" id="ville"></div>
           <div class="form-group"><label>Distance max (km)</label><input type="number" placeholder="30" id="distance" value="30"></div>
           <div class="form-group"><label>Salaire minimum (€/an)</label><input type="number" placeholder="35000" id="salaire-min"></div>
-          <div class="form-group"><label>Score minimum</label>
-            <select id="score-min"><option value="60">60%+</option><option value="70" selected>70%+</option><option value="80">80%+</option></select>
-          </div>
         </div>
         <div style="display:flex; justify-content:space-between; margin-top:24px;">
           <button class="btn btn-ghost btn-lg" onclick="nextStep(1)">← Retour</button>
@@ -384,24 +381,19 @@
           </div>
         </div>
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-card-label">Offres détectées</div><div class="stat-card-value" id="stat-total">—</div><div class="stat-card-sub">Aujourd'hui</div></div>
-          <div class="stat-card"><div class="stat-card-label">Score moyen</div><div class="stat-card-value" id="stat-score">—</div><div class="stat-card-sub">Compatibilité</div></div>
+          <div class="stat-card"><div class="stat-card-label">Offres détectées</div><div class="stat-card-value" id="stat-total">—</div><div class="stat-card-sub">Correspondances</div></div>
           <div class="stat-card"><div class="stat-card-label">Candidatures</div><div class="stat-card-value" id="stat-candidatures">0</div><div class="stat-card-sub">Envoyées</div></div>
           <div class="stat-card"><div class="stat-card-label">Taux de réponse</div><div class="stat-card-value" id="stat-taux">0%</div><div class="stat-card-sub">30 derniers jours</div></div>
         </div>
         <div class="offres-header">
           <h2>Offres correspondantes</h2>
-          <div class="tabs">
-            <button class="tab active" onclick="filterByScore('all',this)">Toutes</button>
-            <button class="tab" onclick="filterByScore(85,this)">85%+</button>
-            <button class="tab" onclick="filterByScore(70,this)">70%+</button>
-          </div>
         </div>
         <div id="offres-list"><div class="loading"><div class="spinner"></div> Chargement des offres...</div></div>
       </div>
       <div id="dash-candidatures" style="display:none">
         <div class="page-header"><div><h1>Mes candidatures 📋</h1><p>Suivi en temps réel</p></div></div>
-        <div class="empty-state"><h3>Aucune candidature</h3><p>Postule depuis l'onglet Offres</p><button class="btn btn-primary" onclick="showDashTab('offres')">Voir les offres →</button></div>
+        <div id="candidatures-empty" class="empty-state"><h3>Aucune candidature</h3><p>Postule depuis l'onglet Offres</p><button class="btn btn-primary" onclick="showDashTab('offres')">Voir les offres →</button></div>
+        <div id="candidatures-list" style="display:none" class="candidatures-list-cards"></div>
       </div>
       <div id="dash-stats" style="display:none">
         <div class="page-header"><div><h1>Statistiques 📊</h1><p>Analyse de ta recherche</p></div></div>
@@ -452,20 +444,15 @@
     </div>
     <div style="display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap;" id="modal-badges"></div>
     <div class="modal-section">
-      <h3>Score de compatibilité</h3>
-      <div style="display:flex; align-items:center; gap:16px; padding:16px; background:var(--blue-light); border-radius:10px;">
-        <div style="font-family:'Syne',sans-serif; font-size:48px; font-weight:800; color:var(--blue);" id="modal-score">—</div>
-        <div id="modal-points" style="font-size:14px; color:var(--gray);"></div>
-      </div>
-    </div>
-    <div class="modal-section">
       <h3>Lettre de motivation</h3>
+      <p style="font-size:13px; color:var(--gray); margin-bottom:12px;">Générée par l'IA à partir de ton CV et de l'offre.</p>
       <div id="modal-lettre-loading" class="loading" style="padding:20px;"><div class="spinner"></div> Génération en cours...</div>
       <pre id="modal-lettre" style="display:none;"></pre>
     </div>
     <div class="modal-section">
-      <h3>CV adapté</h3>
-      <div id="modal-cv-loading" class="loading" style="padding:20px;"><div class="spinner"></div> Adaptation en cours...</div>
+      <h3>Ton CV</h3>
+      <p style="font-size:13px; color:var(--gray); margin-bottom:12px;">Ton CV pour postuler (référence).</p>
+      <div id="modal-cv-loading" class="loading" style="padding:20px;"><div class="spinner"></div> Chargement...</div>
       <pre id="modal-cv" style="display:none;"></pre>
     </div>
     <div style="display:flex; gap:12px; margin-top:24px;">
@@ -513,7 +500,9 @@ function showDashTab(tab, el) {
   ['offres','candidatures','stats','profil'].forEach(t => document.getElementById('dash-'+t).style.display = t===tab?'block':'none');
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
   if (el) el.classList.add('active');
-  if (tab === 'stats') document.getElementById('stats-analysees').textContent = offresData.length || '0';
+  if (tab === 'stats') { document.getElementById('stats-analysees').textContent = offresData.length || '0'; chargerStats(); }
+  if (tab === 'offres') document.getElementById('stat-total').textContent = offresData.length;
+  if (tab === 'candidatures') chargerCandidatures();
 }
 
 // ══════════════════════════════════════════════
@@ -642,10 +631,10 @@ async function traiterFichier(file) {
   statusMsg.textContent = 'Extraction du texte en cours...';
 
   try {
-    // Extraction PDF — route publique, pas de token requis
+    const headers = await getAuthHeaders();
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch(API_URL + '/cv/extraire', { method: 'POST', body: formData });
+    const res = await fetch(API_URL + '/cv/extraire', { method: 'POST', headers, body: formData });
     if (!res.ok) throw new Error('Erreur extraction');
     const data = await res.json();
 
@@ -655,7 +644,6 @@ async function traiterFichier(file) {
       document.getElementById('upload-subtitle').textContent = data.pages + ' page(s) extraite(s)';
 
       // Analyse CV — route protégée
-      const headers = await getAuthHeaders();
       const controller2 = new AbortController();
       const timeout2 = setTimeout(() => controller2.abort(), 60000);
       const res2 = await fetch(API_URL + '/ia/analyser-cv', {
@@ -709,6 +697,59 @@ function showDashboard() {
     document.getElementById('sidebar-user-name').textContent = nom;
   }
   chargerOffres();
+  chargerStats();
+}
+
+async function chargerStats() {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(API_URL + '/stats/me', { method: 'GET', headers });
+    const data = await res.json();
+    if (data.success && data.stats) {
+      const s = data.stats;
+      document.getElementById('stat-candidatures').textContent = s.envoyees ?? s.total ?? 0;
+      document.getElementById('stat-taux').textContent = (s.taux_reponse ?? 0) + '%';
+      document.getElementById('stats-envoyees').textContent = s.envoyees ?? 0;
+      document.getElementById('stats-entretiens').textContent = s.entretiens ?? 0;
+      document.getElementById('stats-analysees').textContent = s.total ?? 0;
+    }
+  } catch (_) {}
+}
+
+async function chargerCandidatures() {
+  const emptyEl = document.getElementById('candidatures-empty');
+  const listEl = document.getElementById('candidatures-list');
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(API_URL + '/candidatures/me', { method: 'GET', headers });
+    const data = await res.json();
+    if (data.success && Array.isArray(data.candidatures)) {
+      const arr = data.candidatures;
+      if (arr.length === 0) {
+        emptyEl.style.display = 'block';
+        listEl.style.display = 'none';
+      } else {
+        emptyEl.style.display = 'none';
+        listEl.style.display = 'block';
+        listEl.innerHTML = arr.map(c => {
+          const offre = c.offre || {};
+          return `<div class="offre-card" style="cursor:default">
+            <div class="offre-info" style="flex:1;">
+              <div class="offre-title">${offre.titre || '—'}</div>
+              <div class="offre-meta"><span>🏢 ${offre.entreprise || '—'}</span><span>📍 ${offre.lieu || '—'}</span></div>
+              <div style="font-size:12px; color:var(--gray); margin-top:6px;">Statut : ${c.statut || 'prête'}</div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+    } else {
+      emptyEl.style.display = 'block';
+      listEl.style.display = 'none';
+    }
+  } catch (_) {
+    emptyEl.style.display = 'block';
+    listEl.style.display = 'none';
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -728,10 +769,9 @@ async function chargerOffres() {
     });
     const data = await res.json();
     if (data.success) {
-      offresData = data.offres.map(o => ({ ...o, score_ia: Math.floor(Math.random() * 35) + 60 })).sort((a,b) => b.score_ia - a.score_ia);
+      offresData = data.offres || [];
       afficherOffres(offresData);
       document.getElementById('stat-total').textContent = offresData.length;
-      document.getElementById('stat-score').textContent = Math.round(offresData.reduce((s,o) => s+o.score_ia, 0) / (offresData.length || 1)) + '%';
       document.getElementById('badge-offres').textContent = offresData.length;
       // Affiche les erreurs éventuelles de sources sans bloquer
       if (data.erreurs && data.erreurs.length > 0) {
@@ -746,15 +786,10 @@ async function chargerOffres() {
 }
 
 function afficherOffres(offres) {
-  const filtered = scoreFilter === 'all' ? offres : offres.filter(o => o.score_ia >= scoreFilter);
-  if (!filtered.length) { document.getElementById('offres-list').innerHTML = '<div class="empty-state"><h3>Aucune offre</h3><p>Modifie tes critères</p></div>'; return; }
-  document.getElementById('offres-list').innerHTML = filtered.map(o => `
+  if (!offres.length) { document.getElementById('offres-list').innerHTML = '<div class="empty-state"><h3>Aucune offre</h3><p>Modifie tes critères</p></div>'; return; }
+  document.getElementById('offres-list').innerHTML = offres.map(o => `
     <div class="offre-card" onclick="ouvrirOffre('${o.id}')">
-      <div class="offre-score" style="background:${getScoreBg(o.score_ia)}">
-        <div class="offre-score-num" style="color:${getScoreColor(o.score_ia)}">${o.score_ia}</div>
-        <div class="offre-score-pct" style="color:${getScoreColor(o.score_ia)}">%</div>
-      </div>
-      <div class="offre-info">
+      <div class="offre-info" style="flex:1;">
         <div class="offre-title">${o.titre||'—'}</div>
         <div class="offre-meta"><span>🏢 ${o.entreprise||'—'}</span><span>📍 ${o.lieu||'—'}</span><span>📄 ${o.contrat||'—'}</span><span>💰 ${o.salaire||'—'}</span></div>
         <div class="offre-tags">${(o.competences||[]).slice(0,3).map(c=>`<span class="offre-tag">${c}</span>`).join('')}<span class="offre-tag">${o.source||'France Travail'}</span></div>
@@ -763,7 +798,6 @@ function afficherOffres(offres) {
     </div>`).join('');
 }
 
-function filterByScore(score, el) { scoreFilter = score; document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); afficherOffres(offresData); }
 function filterOffres() { const q = document.getElementById('search-offres').value.toLowerCase(); afficherOffres(offresData.filter(o=>(o.titre||'').toLowerCase().includes(q)||(o.entreprise||'').toLowerCase().includes(q))); }
 
 async function ouvrirOffre(offreId) {
@@ -771,7 +805,6 @@ async function ouvrirOffre(offreId) {
   if (!offre) return;
   document.getElementById('modal-titre').textContent = offre.titre||'—';
   document.getElementById('modal-entreprise').textContent = `🏢 ${offre.entreprise} — 📍 ${offre.lieu}`;
-  document.getElementById('modal-score').textContent = offre.score_ia + '%';
   document.getElementById('modal-link').href = offre.url||'#';
   document.getElementById('modal-badges').innerHTML = `<span class="badge badge-new">Nouvelle</span><span class="badge" style="background:var(--blue-mid);color:var(--blue);">${offre.source}</span>`;
   document.getElementById('modal-lettre-loading').style.display = 'flex';
@@ -794,7 +827,22 @@ async function ouvrirOffre(offreId) {
         document.getElementById('modal-lettre').textContent = data.lettre;
         document.getElementById('modal-cv-loading').style.display = 'none';
         document.getElementById('modal-cv').style.display = 'block';
-        document.getElementById('modal-cv').textContent = data.cv_adapte;
+        document.getElementById('modal-cv').textContent = data.cv_adapte || '';
+        try {
+          const saveRes = await fetch(API_URL + '/candidatures', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ offre, score: data.score || {}, cv_adapte: data.cv_adapte || '', lettre: data.lettre || '' })
+          });
+          if (saveRes.ok) {
+            chargerStats();
+            const listEl = document.getElementById('candidatures-list');
+            if (listEl && listEl.style.display !== 'none') chargerCandidatures();
+          } else if (saveRes.status === 402) {
+            const err = await saveRes.json().catch(() => ({}));
+            showToast('⚠️', err.detail || 'Limite du plan Gratuit atteinte (3/jour). Passe en Premium.');
+          }
+        } catch (_) {}
       }
     } catch {
       document.getElementById('modal-lettre-loading').style.display = 'none';
@@ -824,9 +872,10 @@ async function updateCV(event) {
   statusEl.className = 'cv-status loading';
   statusMsg.textContent = 'Extraction en cours...';
   try {
+    const headers = await getAuthHeaders();
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch(API_URL + '/cv/extraire', { method:'POST', body: formData });
+    const res = await fetch(API_URL + '/cv/extraire', { method:'POST', headers, body: formData });
     const data = await res.json();
     if (data.success) {
       cvOriginal = data.texte;
